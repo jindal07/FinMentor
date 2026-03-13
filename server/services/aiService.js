@@ -31,7 +31,7 @@ const GENERATION_CONFIG = {
   temperature: 0.7,
   topP: 0.9,
   topK: 40,
-  maxOutputTokens: 8192,
+  maxOutputTokens: 2048,
 };
 
 const SAFETY_SETTINGS = [
@@ -83,7 +83,7 @@ function createChatSession(sessionId, userContext = {}) {
   const fullInstruction = SYSTEM_INSTRUCTION + contextInstruction;
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     systemInstruction: fullInstruction,
     generationConfig: GENERATION_CONFIG,
     safetySettings: SAFETY_SETTINGS,
@@ -160,7 +160,6 @@ async function getMentorResponse(sessionId, userMessage, userContext = {}) {
     return result.response.text();
   } catch (err) {
     console.error("Gemini API error:", err.message);
-    sessions.delete(sessionId);
 
     if (err.message?.includes("SAFETY")) {
       throw new MentorError(
@@ -179,6 +178,7 @@ async function getMentorResponse(sessionId, userMessage, userContext = {}) {
     }
 
     if (err.message?.includes("API_KEY") || err.message?.includes("401") || err.message?.includes("403")) {
+      sessions.delete(sessionId);
       throw new MentorError(
         "Invalid API key",
         "AUTH_ERROR",
@@ -187,6 +187,7 @@ async function getMentorResponse(sessionId, userMessage, userContext = {}) {
     }
 
     if (err.message?.includes("fetch") || err.message?.includes("ENOTFOUND") || err.message?.includes("network")) {
+      sessions.delete(sessionId);
       throw new MentorError(
         "Network error",
         "NETWORK_ERROR",
@@ -194,6 +195,7 @@ async function getMentorResponse(sessionId, userMessage, userContext = {}) {
       );
     }
 
+    sessions.delete(sessionId);
     throw new MentorError(
       err.message || "Unknown error",
       "UNKNOWN_ERROR",
