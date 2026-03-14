@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const GOALS = [
   { id: "emergency", label: "Build emergency fund", icon: "🛡️", desc: "Safety net for unexpected expenses" },
@@ -26,6 +26,15 @@ export default function OnboardingForm({ onSubmit }) {
     (step === 0 && form.income) ||
     (step === 1 && form.savings) ||
     (step === 2 && form.goal);
+
+  const handleEnter = useCallback((e) => {
+    if (e.key === "Enter" && step === 2 && form.goal) handleNext();
+  }, [step, form.goal]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleEnter);
+    return () => window.removeEventListener("keydown", handleEnter);
+  }, [handleEnter]);
 
   return (
     <div className="w-full max-w-lg mx-auto">
@@ -81,9 +90,17 @@ export default function OnboardingForm({ onSubmit }) {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-taupe-400 font-semibold text-lg">₹</span>
               <input
                 type="number"
+                min="0"
                 value={form.income}
-                onChange={(e) => setForm({ ...form, income: e.target.value })}
-                placeholder="e.g. 30,000"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setForm({ ...form, income: val });
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                  if (e.key === "Enter" && form.income) handleNext();
+                }}
+                placeholder="e.g. 30000"
                 className="input-modern pl-9 py-4 text-lg"
                 autoFocus
               />
@@ -113,9 +130,17 @@ export default function OnboardingForm({ onSubmit }) {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-taupe-400 font-semibold text-lg">₹</span>
               <input
                 type="number"
+                min="0"
                 value={form.savings}
-                onChange={(e) => setForm({ ...form, savings: e.target.value })}
-                placeholder="e.g. 5,000"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  setForm({ ...form, savings: val });
+                }}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-", "."].includes(e.key)) e.preventDefault();
+                  if (e.key === "Enter" && form.savings) handleNext();
+                }}
+                placeholder="e.g. 5000"
                 className="input-modern pl-9 py-4 text-lg"
                 autoFocus
               />
